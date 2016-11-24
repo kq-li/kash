@@ -49,6 +49,7 @@ char **splitOnChar(char *str, char delim, char escRegion, char escOne) {
 				str++;
 			} else if (*str == escRegion) {
 				state = ESCAPE;
+				trail = removeChar(trail, escRegion);
 			} else if (*str == delim) {
 				state = DELIMITER;
 				*str = 0;
@@ -76,7 +77,7 @@ char **splitOnChar(char *str, char delim, char escRegion, char escOne) {
 				str++;
 			} else if (*str == escRegion) {
 				state = NORMAL;
-				*str = 0;
+				trail = removeChar(trail, escRegion);
 			}
 			
 			break;
