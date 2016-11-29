@@ -18,66 +18,122 @@ static void sighandler(int signo) {
 	}
 }
 
-char *removeChar(char *s, char c) {
-	int pos = 0;
+void copyBetween(char *dest, char *start, char *end) {
+	while (start != end) {
+		*(dest++) = *(start++);
+	}
 
-	while (*(s + pos++) != c);
-	pos--;
-	
-	if (*(s + pos)) {
-		char *ret = (char *) calloc(sizeof(char), strlen(s) - 1);
-		strncpy(ret, s, pos++);
-		strcat(ret, s + pos);
-		return ret;
-	} else {
-		return s;
-	}	
+	dest = 0;
 }
 
-char **splitOnChar(char *str, char delim, char escRegion, char escOne) {
+void shift(char *str, int offset) {
+	char *trail = str;
+	str += offset;
+
+	while (*str) {
+		*(trail++) = *(str++);
+	}
+
+	*trail = 0;
+}
+
+void removeFirst(char *str, char *toRemove) {
+	char *trail = str;
+
+	while (*str) {
+		if (strchr(toRemove, *str)) {
+			shift(str, 1);
+			break;
+		}
+	}
+}
+
+void removeAll(char *str, char *toRemove) {
+	char *trail = str;
+
+	while (*str) {
+		if (!strchr(toRemove, *str)) {
+			*(trail++) = *str;
+		}
+
+		str++;
+	}
+
+	*trail = 0;
+}
+
+void stripChars(char *str, char *toStrip, char *escape) {
+	if (!str) {
+		return;
+	}
+	
+	while (strchr(toStrip, *str)) {
+		//printf("str: \"%s\"\n", str);
+		shift(str, 1);
+	}
+
+	char *end = str + strlen(str) - 1;
+
+	while (strchr(toStrip, *end) && !strchr(escape, *(end - 1))) {
+		//printf("str: \"%s\"\n", str);
+		*(end--) = 0;
+	}
+
+	//printf("str: \"%s\"\n", str);
+}
+
+int startsWith(char *str, char *key) {
+	return strncmp(str, key, strlen(key)) == 0 ? 1 : 0;
+}
+
+// just trust me
+char **splitOnChars(char *str, char *delim, char *escRegion, char *escOne) {
 	char **ret = (char **) calloc(sizeof(char *), strlen(str));
+	char *trail = str;
 	int state = 0;
 	int i = 0;
-	char *trail = str;
-//	printf("*%s*\n", str);
+	char *escape = (char *) calloc(sizeof(char), strlen(escRegion) + strlen(escOne) + 1);
+	strcpy(escape, escRegion);
+	strcat(escape, escOne);
+	//	printf("*%s*\n", str);
 
 	while (*str) {
 		switch (state) {
 		case NORMAL:
-			if (*str == escOne) {
-				trail = removeChar(trail, escOne);
-				str++;
-			} else if (*str == escRegion) {
+			if (startsWith(str, escOne)) {
+				shift(str, 1);
+			} else if (startsWith(str, escRegion)) {
 				state = ESCAPE;
-				trail = removeChar(trail, escRegion);
-			} else if (*str == delim) {
+				shift(str--, 1);
+			} else if (strchr(delim, *str)) {
 				state = DELIMITER;
 				*str = 0;
 				ret[i++] = trail;
+				trail = str + 1;
 			}
 
 			break;
 
 		case DELIMITER:
-			if (*str == delim) {
+			if (strchr(delim, *str)) {
 				*str = 0;
-			} else if (*str == escRegion) {
+				trail = str;
+			} else if (startsWith(str, escRegion)) {
 				state = ESCAPE;
-				*str = 0;
-				trail = str + 1;
+				shift(str--, 1);
 			} else {
 				state = NORMAL;
-				trail = str;
+				trail = str--;
 			}
 
 			break;
 
 		case ESCAPE:
-			if (*str == escOne) {
-				str++;
-			} else if (*str == escRegion) {
+			if (startsWith(str, escOne)) {
+				shift(str, 1);
+			} else if (startsWith(str, escRegion)) {
 				state = NORMAL;
-				trail = removeChar(trail, escRegion);
+				shift(str--, 1);
 			}
 			
 			break;
@@ -87,50 +143,64 @@ char **splitOnChar(char *str, char delim, char escRegion, char escOne) {
 	}
 
 	ret[i] = trail;
+	char **cp = ret;
 
-//	char **cp = ret;
+	printf("*");
 
-//	printf("*");
-
-//	if (*cp) {
-//		printf("%s", *(cp++));
-//	}
+	if (*cp) {
+		printf("%s", *(cp++));
+	}
 	
-//	while (*cp) {
-//		printf("_%s", *(cp++));
-//	}
+	while (*cp) {
+		printf("_%s", *(cp++));
+	}
 
-//	printf("*\n");
+	printf("*\n");
 	
 	return ret;
 }
 
 char **parseInput(char input[INPUT_MAX]) {
-	char *s = input;
-	//strip terminating newline
-	*(strrchr(input, '\n')) = 0;
-	
-	char **command = splitOnChar(s, ' ', '"', '\\');
+	//strip newline
+	char *s = (char *) calloc(sizeof(char), INPUT_MAX);
+	strcpy(s, input);
+	stripChars(s, " \n", "\\");
+	printf("%s\n", s);
+
+	char **command = splitOnChars(s, " ", "\"", "\\");
 	return command;
 }
 
-void runNext() {
-	char cwd[128];
-	getcwd(cwd, 128);
-	printf("%s@ ", cwd);
-	char input[INPUT_MAX];
-	fgets(input, sizeof(char) * INPUT_MAX, stdin);
-	char **command = parseInput(input);
+void redirGreater(char **command, char *filename) {
+	
+}
 
-//	char **s = command;
-//	printf("%s", *(s++));
+void redirLess(char **command, char *filename) {
+	
+}
 
-//	while (*s) {
-//		printf("_%s", *(s++));
-//	}
+void redirPipe(char **command1, char **command2) {
 
-//	printf("\n");
+}
 
+void execute(char *input) {
+	char *c = input;
+	char **command;
+
+	//	while (*c) {
+	//		if (c == '>') {
+	//			*(c++) = 0;
+	//			command = parseInput(input);
+	//			
+	//		} else if (c == '<') {
+
+	//		} else if (c == '|') {
+
+	//		}
+	//	}
+	
+	command = parseInput(input);
+	
 	if (strcmp(command[0], "cd") == 0) {
 		if (command[1]) {
 			if (chdir(command[1]) != 0) {
@@ -151,12 +221,27 @@ void runNext() {
 	} 
 }
 
+void prompt() {
+	char cwd[128];
+	getcwd(cwd, 128);
+	printf("%s@ ", cwd);
+	char input[INPUT_MAX];
+	fgets(input, sizeof(char) * INPUT_MAX, stdin);
+	//scanf("%s", input);
+	execute(input);
+}
+
 int main() {
+	//char input[32];
+	//strcpy(input, " *Hello World! * ");
+	//stripChars(input, " *", "\\");
+	//printf("\n%s_\n", input);
+	
 	int isRunning = 1;
 	signal(SIGINT, sighandler);
 	
 	while (isRunning) {
-		runNext();
+		prompt();
 	}
 
 	return 0;
