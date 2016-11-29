@@ -160,9 +160,9 @@ char **splitOnChars(char *str, char *delim, char *escRegion, char *escOne) {
 	return ret;
 }
 
-char **parseInput(char input[INPUT_MAX]) {
+char **parseInput(char *input) {
 	//strip newline
-	char *s = (char *) calloc(sizeof(char), INPUT_MAX);
+	char *s = (char *) calloc(sizeof(char), strlen(input));
 	strcpy(s, input);
 	stripChars(s, " \n", "\\");
 	printf("%s\n", s);
