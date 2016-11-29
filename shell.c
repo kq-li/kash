@@ -165,7 +165,6 @@ char **parseInput(char *input) {
 	char *s = (char *) calloc(sizeof(char), strlen(input));
 	strcpy(s, input);
 	stripChars(s, " \n", "\\");
-	printf("%s\n", s);
 
 	char **command = splitOnChars(s, " ", "\"", "\\");
 	return command;
@@ -184,22 +183,34 @@ void redirPipe(char **command1, char **command2) {
 }
 
 void execute(char *input) {
-	char *c = input;
-	char **command;
+	char *s1 = input;
+	char *s2 = input;
 
-	//	while (*c) {
-	//		if (c == '>') {
-	//			*(c++) = 0;
-	//			command = parseInput(input);
-	//			
-	//		} else if (c == '<') {
-
-	//		} else if (c == '|') {
-
-	//		}
-	//	}
+	while (*s2) {
+		if (*s2 == '>') {
+			*(s2++) = 0;
+			stripChars(s1, " \n", "\\");
+			stripChars(s2, " \n", "\\");
+			redirGreater(parseInput(s1), s2);
+			return;
+		} else if (*s2 == '<') {
+			*(s2++) = 0;
+			stripChars(s1, " \n", "\\");
+			stripChars(s2, " \n", "\\");
+			redirLess(parseInput(s1), s2);
+			return;
+		} else if (*s2 == '|') {
+			*(s2++) = 0;
+			stripChars(s1, " \n", "\\");
+			stripChars(s2, " \n", "\\");
+			redirPipe(parseInput(s1), parseInput(s2));
+			return;
+		} else {
+			s2++;
+		}
+	}
 	
-	command = parseInput(input);
+	char **command = parseInput(input);
 	
 	if (strcmp(command[0], "cd") == 0) {
 		if (command[1]) {
@@ -227,7 +238,7 @@ void prompt() {
 	printf("%s@ ", cwd);
 	char input[INPUT_MAX];
 	fgets(input, sizeof(char) * INPUT_MAX, stdin);
-	//scanf("%s", input);
+	stripChars(input, " \n", "\\");
 	execute(input);
 }
 
