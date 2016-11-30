@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+
+#include "shell.h"
 
 #define INPUT_MAX 1024
 #define NORMAL 0
@@ -170,43 +173,44 @@ char **parseInput(char *input) {
 	return command;
 }
 
-void redirGreater(char **command, char *filename) {
+void redirGreater(char *input, char *filename) {
+	umask(0000);
+	int stdout = dup(STDOUT_FILENO);
+	int fd = open(filename, O_WRONLY | O_CREAT, 0644);
+	dup2(fd, STDOUT_FILENO);
+	execute(input);
+	dup2(stdout, STDOUT_FILENO);
+}
+
+void redirLess(char *input, char *filename) {
 	
 }
 
-void redirLess(char **command, char *filename) {
-	
-}
-
-void redirPipe(char **command1, char **command2) {
+void redirPipe(char *input1, char *input2) {
 
 }
 
 void execute(char *input) {
-	char *s1 = input;
-	char *s2 = input;
+	char *s = input;
 
-	while (*s2) {
-		if (*s2 == '>') {
-			*(s2++) = 0;
-			stripChars(s1, " \n", "\\");
-			stripChars(s2, " \n", "\\");
-			redirGreater(parseInput(s1), s2);
+	while (*s) {
+		if (*s == '>') {
+			*(s++) = 0;
+			stripChars(s, " \n", "\\");
+			redirGreater(input, s);
 			return;
-		} else if (*s2 == '<') {
-			*(s2++) = 0;
-			stripChars(s1, " \n", "\\");
-			stripChars(s2, " \n", "\\");
-			redirLess(parseInput(s1), s2);
+		} else if (*s == '<') {
+			*(s++) = 0;
+			stripChars(s, " \n", "\\");
+			redirLess(input, s);
 			return;
-		} else if (*s2 == '|') {
-			*(s2++) = 0;
-			stripChars(s1, " \n", "\\");
-			stripChars(s2, " \n", "\\");
-			redirPipe(parseInput(s1), parseInput(s2));
+		} else if (*s == '|') {
+			*(s++) = 0;
+			stripChars(s, " \n", "\\");
+			redirPipe(input, s);
 			return;
 		} else {
-			s2++;
+			s++;
 		}
 	}
 	
@@ -228,7 +232,16 @@ void execute(char *input) {
 	} else if (fork()) {
 		wait(NULL);
 	} else {
-		execvp(command[0], command);
+		if (execvp(command[0], command)) {
+			switch (errno) {
+			case ENOENT:
+				printf("%s: command not found\n", command[0]);
+				break;
+			default:
+				printf("Error %d: %s\n", errno, strerror(errno));
+				break;
+			}
+		}
 	} 
 }
 
