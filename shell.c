@@ -156,11 +156,11 @@ char **splitOnChars(char *str, char *delim, char *escRegion, char *escOne) {
 	//printf("*");
 
 	//if (*cp) {
-		//printf("%s", *(cp++));
+	//printf("%s", *(cp++));
 	//}
 	
 	//while (*cp) {
-		//printf("_%s", *(cp++));
+	//printf("_%s", *(cp++));
 	//}
 
 	//printf("*\n");
@@ -178,12 +178,20 @@ char **parseInput(char *input) {
 	return command;
 }
 
-void redirStdout(char *input, char *filename) {
+void redirStdoutWrite(char *input, char *filename) {
 	umask(0000);
-	int fd = open(filename, O_WRONLY | O_CREAT, 0644);
+	int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0644);
 
 	if (fd == -1) {
-		printf("Error %d: %s\n", errno, strerror(errno));
+		switch (errno) {
+		case ENOENT:
+			printf("%s: No such file or directory\n", filename);
+			break;
+
+		default:
+			printf("Error %d: %s\n", errno, strerror(errno));
+			break;
+		}
 	} else {
 		int stdout = dup(STDOUT_FILENO);
 		dup2(fd, STDOUT_FILENO);
@@ -191,6 +199,135 @@ void redirStdout(char *input, char *filename) {
 		execute(input);
 		dup2(stdout, STDOUT_FILENO);
 		close(stdout);
+	}
+}
+
+void redirStdoutAppend(char *input, char *filename) {
+	umask(0000);
+	int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644);
+
+		if (fd == -1) {
+		switch (errno) {
+		case ENOENT:
+			printf("%s: No such file or directory\n", filename);
+			break;
+
+		default:
+			printf("Error %d: %s\n", errno, strerror(errno));
+			break;
+		}
+	} else {
+		int stdout = dup(STDOUT_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		close(fd);
+		execute(input);
+		dup2(stdout, STDOUT_FILENO);
+		close(stdout);
+	}
+}
+
+void redirStderrWrite(char *input, char *filename) {
+	umask(0000);
+	int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+
+		if (fd == -1) {
+		switch (errno) {
+		case ENOENT:
+			printf("%s: No such file or directory\n", filename);
+			break;
+
+		default:
+			printf("Error %d: %s\n", errno, strerror(errno));
+			break;
+		}
+	} else {
+		int stderr_copy = dup(STDERR_FILENO);
+		dup2(fd, STDERR_FILENO);
+		close(fd);
+		execute(input);
+		dup2(stderr_copy, STDERR_FILENO);
+		close(stderr_copy);
+	}
+}
+
+void redirStderrAppend(char *input, char *filename) {
+	umask(0000);
+	int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644);
+
+		if (fd == -1) {
+		switch (errno) {
+		case ENOENT:
+			printf("%s: No such file or directory\n", filename);
+			break;
+
+		default:
+			printf("Error %d: %s\n", errno, strerror(errno));
+			break;
+		}
+	} else {
+		int stderr_copy = dup(STDERR_FILENO);
+		dup2(fd, STDERR_FILENO);
+		close(fd);
+		execute(input);
+		dup2(stderr_copy, STDERR_FILENO);
+		close(stderr_copy);
+	}
+}
+
+void redirStdoutStderrWrite(char *input, char *filename) {
+	umask(0000);
+	int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+
+	if (fd == -1) {
+		switch (errno) {
+		case ENOENT:
+			printf("%s: No such file or directory\n", filename);
+			break;
+
+		default:
+			printf("Error %d: %s\n", errno, strerror(errno));
+			break;
+		}
+	} else {
+		int stdout_copy = dup(STDOUT_FILENO);
+		int stderr_copy = dup(STDERR_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+		close(fd);
+		execute(input);
+		dup2(stdout_copy, STDOUT_FILENO);
+		dup2(stderr_copy, STDERR_FILENO);
+		close(stdout_copy);
+		close(stderr_copy);
+	}
+}
+
+void redirStdoutStderrAppend(char *input, char *filename) {
+	umask(0000);
+	int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0644);
+
+
+		if (fd == -1) {
+		switch (errno) {
+		case ENOENT:
+			printf("%s: No such file or directory\n", filename);
+			break;
+
+		default:
+			printf("Error %d: %s\n", errno, strerror(errno));
+			break;
+		}
+	} else {
+		int stdout_copy = dup(STDOUT_FILENO);
+		int stderr_copy = dup(STDERR_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+		close(fd);
+		execute(input);
+		dup2(stdout_copy, STDOUT_FILENO);
+		dup2(stderr_copy, STDERR_FILENO);
+		close(stdout_copy);
+		close(stderr_copy);
 	}
 }
 
@@ -252,18 +389,42 @@ void execute(char *input) {
 	char *s = input;
 
 	while (*s) {
-		if (startsWith(s, ">>")) {
-
-		} else if (startsWith(s, "2>")) {
-
+		if (*s == '\\') {
+			s++;
 		} else if (startsWith(s, "2>>")) {
-
+			*(s++) = 0;
+			shift(s, 2);
+			stripChars(s, " \n", "\\");
+			redirStderrAppend(input, s);
+			return;
+		} else if (startsWith(s, "2>")) {
+			*(s++) = 0;
+			shift(s, 1);
+			stripChars(s, " \n", "\\");
+			redirStderrWrite(input, s);
+			return;
+		} else if (startsWith(s, "&>>")) {
+			*(s++) = 0;
+			shift(s, 2);
+			stripChars(s, " \n", "\\");
+			redirStdoutStderrAppend(input, s);
+			return;
 		} else if (startsWith(s, "&>")) {
-			
+			*(s++) = 0;
+			shift(s, 1);
+			stripChars(s, " \n", "\\");
+			redirStdoutStderrWrite(input, s);
+			return;			
+		} else if (startsWith(s, ">>")) {
+			*(s++) = 0;
+			shift(s, 1);
+			stripChars(s, " \n", "\\");
+			redirStdoutAppend(input, s);
+			return;
 		} else if (*s == '>') {
 			*(s++) = 0;
 			stripChars(s, " \n", "\\");
-			redirStdout(input, s);
+			redirStdoutWrite(input, s);
 			return;
 		} else if (*s == '<') {
 			*(s++) = 0;
@@ -280,9 +441,15 @@ void execute(char *input) {
 			execute(input);
 			execute(s);
 			return;
-		} else {
-			s++;
 		}
+
+		s++;
+	}
+
+	int background = 0;
+	
+	if (*s == '&' && *(s - 1) != '\\') {
+		background = 1;
 	}
 	
 	char **command = parseInput(input);

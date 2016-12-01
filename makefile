@@ -1,6 +1,6 @@
 GCC = gcc -g
 
-all: shell.c
+all: shell.c shell.h
 	$(GCC) shell.c -o shell -lreadline
 
 clean:
