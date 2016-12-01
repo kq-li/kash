@@ -146,19 +146,20 @@ char **splitOnChars(char *str, char *delim, char *escRegion, char *escOne) {
 	}
 
 	ret[i] = trail;
-	char **cp = ret;
 
-	printf("*");
+	//char **cp = ret;
 
-	if (*cp) {
-		printf("%s", *(cp++));
-	}
+	//printf("*");
+
+	//if (*cp) {
+		//printf("%s", *(cp++));
+	//}
 	
-	while (*cp) {
-		printf("_%s", *(cp++));
-	}
+	//while (*cp) {
+		//printf("_%s", *(cp++));
+	//}
 
-	printf("*\n");
+	//printf("*\n");
 	
 	return ret;
 }
@@ -173,21 +174,74 @@ char **parseInput(char *input) {
 	return command;
 }
 
-void redirGreater(char *input, char *filename) {
+void redirStdout(char *input, char *filename) {
 	umask(0000);
-	int stdout = dup(STDOUT_FILENO);
 	int fd = open(filename, O_WRONLY | O_CREAT, 0644);
-	dup2(fd, STDOUT_FILENO);
-	execute(input);
-	dup2(stdout, STDOUT_FILENO);
+
+	if (fd == -1) {
+		printf("Error %d: %s\n", errno, strerror(errno));
+	} else {
+		int stdout = dup(STDOUT_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		close(fd);
+		execute(input);
+		dup2(stdout, STDOUT_FILENO);
+		close(stdout);
+	}
 }
 
-void redirLess(char *input, char *filename) {
-	
+void redirStdin(char *input, char *filename) {
+	umask(0000);
+	int fd = open(filename, O_RDONLY, 0644);
+
+	if (fd == -1) {
+		printf("Error %d: %s\n", errno, strerror(errno));
+	} else {
+		int stdin = dup(STDIN_FILENO);
+		dup2(fd, STDIN_FILENO);
+		execute(input);
+		dup2(stdin, STDIN_FILENO);
+		close(stdin);
+		close(fd);
+	}
 }
 
 void redirPipe(char *input1, char *input2) {
+	int stdin_copy = dup(STDIN_FILENO);
+	int stdout_copy = dup(STDOUT_FILENO);
+	int pipeEnds[2];
 
+	if (pipe(pipeEnds) == -1) {
+		printf("Error %d: %s\n", errno, strerror(errno));
+		return;
+	}
+
+	//printf("in: %d, out: %d\n", pipeEnds[0], pipeEnds[1]);
+	
+	//printf("Redirecting stdout to pipe read\n");
+	dup2(pipeEnds[1], STDOUT_FILENO);
+
+	close(pipeEnds[1]);
+	
+	//dprintf(stdout_copy, "Executing %s\n", input1);
+	execute(input1);
+
+	//dprintf(stdout_copy, "Restoring stdout\n");
+	dup2(stdout_copy, STDOUT_FILENO);
+
+	//printf("Redirecting stdin to pipe write\n");
+	dup2(pipeEnds[0], STDIN_FILENO);
+
+	close(pipeEnds[0]);
+
+	//printf("Executing %s\n", input2);
+	execute(input2);
+
+	//printf("Restoring stdin\n");
+	dup2(stdin_copy, STDIN_FILENO);
+
+	close(stdin_copy);
+	close(stdout_copy);
 }
 
 void execute(char *input) {
@@ -197,12 +251,12 @@ void execute(char *input) {
 		if (*s == '>') {
 			*(s++) = 0;
 			stripChars(s, " \n", "\\");
-			redirGreater(input, s);
+			redirStdout(input, s);
 			return;
 		} else if (*s == '<') {
 			*(s++) = 0;
 			stripChars(s, " \n", "\\");
-			redirLess(input, s);
+			redirStdin(input, s);
 			return;
 		} else if (*s == '|') {
 			*(s++) = 0;
@@ -229,17 +283,23 @@ void execute(char *input) {
 		}
 	} else if (strcmp(command[0], "exit") == 0) {
 		printf("exit\n");
-	} else if (fork()) {
-		wait(NULL);
 	} else {
-		if (execvp(command[0], command)) {
-			switch (errno) {
-			case ENOENT:
-				printf("%s: command not found\n", command[0]);
-				break;
-			default:
-				printf("Error %d: %s\n", errno, strerror(errno));
-				break;
+		int pid = fork();
+
+		if (pid == -1) {
+			printf("Error %d: %s\n", errno, strerror(errno));
+		} else if (pid) { //parent
+			wait(&pid);
+		} else { //child
+			if (execvp(command[0], command)) {
+				switch (errno) {
+				case ENOENT:
+					printf("%s: command not found\n", command[0]);
+					break;
+				default:
+					printf("Error %d: %s\n", errno, strerror(errno));
+					break;
+				}
 			}
 		}
 	} 
