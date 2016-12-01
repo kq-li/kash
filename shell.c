@@ -263,6 +263,11 @@ void execute(char *input) {
 			stripChars(s, " \n", "\\");
 			redirPipe(input, s);
 			return;
+		} else if (*s == ';') {
+			*(s++) = 0;
+			execute(input);
+			execute(s);
+			return;
 		} else {
 			s++;
 		}
