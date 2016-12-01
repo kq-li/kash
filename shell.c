@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include "shell.h"
 
@@ -12,14 +14,6 @@
 #define NORMAL 0
 #define DELIMITER 1
 #define ESCAPE 2
-
-static void sighandler(int signo) {
-	switch (signo) {
-	case SIGINT:
-		exit(-1);
-		break;
-	}
-}
 
 void copyBetween(char *dest, char *start, char *end) {
 	while (start != end) {
@@ -65,8 +59,18 @@ void removeAll(char *str, char *toRemove) {
 	*trail = 0;
 }
 
+int isEmpty(char *s) {
+	while (*s) {
+		if (!strchr(" \n", *(s++))) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 void stripChars(char *str, char *toStrip, char *escape) {
-	if (!str) {
+	if (!str || !(*str)) {
 		return;
 	}
 	
@@ -248,7 +252,15 @@ void execute(char *input) {
 	char *s = input;
 
 	while (*s) {
-		if (*s == '>') {
+		if (startsWith(s, ">>")) {
+
+		} else if (startsWith(s, "2>")) {
+
+		} else if (startsWith(s, "2>>")) {
+
+		} else if (startsWith(s, "&>")) {
+			
+		} else if (*s == '>') {
 			*(s++) = 0;
 			stripChars(s, " \n", "\\");
 			redirStdout(input, s);
@@ -278,16 +290,29 @@ void execute(char *input) {
 	if (strcmp(command[0], "cd") == 0) {
 		if (command[1]) {
 			if (chdir(command[1]) != 0) {
-				printf("Error %d: %s\n", errno, strerror(errno));
+				switch (errno) {
+				case ENOTDIR:
+					printf("%s: %s: Not a directory\n", command[0], command[1]);
+					break;
+					
+				case ENOENT:
+					printf("%s: %s: No such file or directory\n", command[0], command[1]);
+					break;
+
+				default:
+					printf("Error %d: %s\n", errno, strerror(errno));
+					break;
+				}
 			}
 		} else {
 			printf("%s\n", getenv("HOME"));
+			
 			if (chdir(getenv("HOME")) != 0) {
 				printf("Error %d: %s\n", errno, strerror(errno));
 			}
 		}
 	} else if (strcmp(command[0], "exit") == 0) {
-		printf("exit\n");
+		exit(0);
 	} else {
 		int pid = fork();
 
@@ -311,13 +336,16 @@ void execute(char *input) {
 }
 
 void prompt() {
-	char cwd[128];
-	getcwd(cwd, 128);
-	printf("%s@ ", cwd);
-	char input[INPUT_MAX];
-	fgets(input, sizeof(char) * INPUT_MAX, stdin);
+	char *cwd = getcwd(NULL, 0);
+	char *prefix = (char *) calloc(sizeof(char), strlen(cwd) + 1);
+	sprintf(prefix, "%s @ ", cwd);
+	char *input = readline(prefix);
 	stripChars(input, " \n", "\\");
-	execute(input);
+
+	if (input && *input) {
+		execute(input);
+		add_history(input);
+	}
 }
 
 int main() {
@@ -327,7 +355,6 @@ int main() {
 	//printf("\n%s_\n", input);
 	
 	int isRunning = 1;
-	signal(SIGINT, sighandler);
 	
 	while (isRunning) {
 		prompt();
