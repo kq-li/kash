@@ -15,23 +15,23 @@
 #define DELIMITER 1
 #define ESCAPE 2
 
-#define RESET "\x1B[0m"
-#define BOLD "\x1B[1m"
-#define UNDERLINE "\x1B[4m"
-#define RED "\x1B[0;31m"
-#define GREEN "\x1B[0;32m"
-#define YELLOW "\x1B[0;33m"
-#define BLUE "\x1B[0;34m"
-#define MAGENTA "\x1B[0;35m"
-#define CYAN "\x1B[0;36m"
-#define WHITE "\x1B[0;37m"
-#define BOLD_RED "\x1B[1;31m"
-#define BOLD_GREEN "\x1B[1;32m"
-#define BOLD_YELLOW "\x1B[1;33m"
-#define BOLD_BLUE "\x1B[1;34m"
-#define BOLD_MAGENTA "\x1B[1;35m"
-#define BOLD_CYAN "\x1B[1;36m"
-#define BOLD_WHITE "\x1B[1;37m"
+#define RESET "\001\033[0m\002"
+#define BOLD "\001\033[1m\002"
+#define UNDERLINE "\001\033[4m\002"
+#define RED "\001\033[0;31m\002"
+#define GREEN "\001\033[0;32m\002"
+#define YELLOW "\001\033[0;33m\002"
+#define BLUE "\001\033[0;34m\002"
+#define MAGENTA "\001\033[0;35m\002"
+#define CYAN "\001\033[0;36m\002"
+#define WHITE "\001\033[0;37m\002"
+#define BOLD_RED "\001\033[1;31m\002"
+#define BOLD_GREEN "\001\033[1;32m\002"
+#define BOLD_YELLOW "\001\033[1;33m\002"
+#define BOLD_BLUE "\001\033[1;34m\002"
+#define BOLD_MAGENTA "\001\033[1;35m\002"
+#define BOLD_CYAN "\001\033[1;36m\002"
+#define BOLD_WHITE "\001\033[1;37m\002"
 
 // Copies contents of string between start and end to dest.
 void copyBetween(char *dest, char *start, char *end) {
@@ -537,6 +537,8 @@ int main() {
 	//strcpy(input, " *Hello World! * ");
 	//stripChars(input, " *", "\\");
 	//printf("\n%s_\n", input);
+
+	printf("\n");
 	
 	int isRunning = 1;
 	
