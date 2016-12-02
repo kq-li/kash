@@ -525,8 +525,8 @@ void prompt() {
 	stripChars(input, " \n", "\\");
 
 	if (input && *input) {
-		execute(input);
 		add_history(input);
+		execute(input);
 		usleep(1000);
 	}
 }
