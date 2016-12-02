@@ -450,8 +450,9 @@ void execute(char *input) {
 
 	int background = 0;
 	
-	if (*s == '&' && *(s - 1) != '\\') {
+	if (*(s - 1) == '&' && *(s - 2) != '\\') {
 		background = 1;
+		*(s - 1) = 0;
 	}
 	
 	char **command = parseInput(input);
@@ -474,8 +475,6 @@ void execute(char *input) {
 				}
 			}
 		} else {
-			printf("%s\n", getenv("HOME"));
-			
 			if (chdir(getenv("HOME")) != 0) {
 				printf("Error %d: %s\n", errno, strerror(errno));
 			}
@@ -488,7 +487,9 @@ void execute(char *input) {
 		if (pid == -1) {
 			printf("Error %d: %s\n", errno, strerror(errno));
 		} else if (pid) { //parent
-			wait(&pid);
+			if (!background) {
+				waitpid(pid, 0, 0);
+			}
 		} else { //child
 			if (execvp(command[0], command)) {
 				switch (errno) {
@@ -526,6 +527,7 @@ void prompt() {
 	if (input && *input) {
 		execute(input);
 		add_history(input);
+		usleep(1000);
 	}
 }
 
