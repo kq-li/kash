@@ -1,10 +1,10 @@
 GCC = gcc -g
 
-all: shell.c shell.h
-	$(GCC) shell.c -o shell -lreadline
+all: kash.c kash.h
+	$(GCC) kash.c -o kash -lreadline
 
 clean:
-	rm -f *~ shell
+	rm -f *~ kash
 
-run: shell
-	./shell
+run: kash
+	./kash

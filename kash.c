@@ -8,12 +8,30 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "shell.h"
+#include "kash.h"
 
 #define INPUT_MAX 1024
 #define NORMAL 0
 #define DELIMITER 1
 #define ESCAPE 2
+
+#define RESET "\x1B[0m"
+#define BOLD "\x1B[1m"
+#define UNDERLINE "\x1B[4m"
+#define RED "\x1B[0;31m"
+#define GREEN "\x1B[0;32m"
+#define YELLOW "\x1B[0;33m"
+#define BLUE "\x1B[0;34m"
+#define MAGENTA "\x1B[0;35m"
+#define CYAN "\x1B[0;36m"
+#define WHITE "\x1B[0;37m"
+#define BOLD_RED "\x1B[1;31m"
+#define BOLD_GREEN "\x1B[1;32m"
+#define BOLD_YELLOW "\x1B[1;33m"
+#define BOLD_BLUE "\x1B[1;34m"
+#define BOLD_MAGENTA "\x1B[1;35m"
+#define BOLD_CYAN "\x1B[1;36m"
+#define BOLD_WHITE "\x1B[1;37m"
 
 void copyBetween(char *dest, char *start, char *end) {
 	while (start != end) {
@@ -504,8 +522,19 @@ void execute(char *input) {
 
 void prompt() {
 	char *cwd = getcwd(NULL, 0);
-	char *prefix = (char *) calloc(sizeof(char), strlen(cwd) + 1);
-	sprintf(prefix, "%s @ ", cwd);
+	char *home = getenv("HOME");
+	
+	if (startsWith(cwd, home)) {
+		shift(cwd, strlen(home) - 1);
+		*cwd = '~';
+	}
+	
+	char hostname[256];
+	gethostname(hostname, 256);
+	
+	char *prefix = (char *) calloc(sizeof(char), strlen(cwd) + strlen(hostname) + 64);
+	sprintf(prefix, BOLD_MAGENTA "kash " BOLD_RED "%s:" BOLD_BLUE "%s @ " RESET, hostname, cwd);
+
 	char *input = readline(prefix);
 	stripChars(input, " \n", "\\");
 
