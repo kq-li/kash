@@ -41,7 +41,9 @@ Systems - Fall 2016 - Period 10
 ## Bugs
 - ^C and ^Z exit kash entirely instead of terminating/backgrounding the current process
 - Only one redirection operator is supported at a time except pipes
-	- "ls > test 2> test2" results in the output of ls being written to a file named "test 2> test2"
+	- ls > test 2> test2 results in the output of ls being written to a file named test 2> test2
+- Redirection operators take priority over quotation marks
+	- rm "test > test" results in the output of rm "test being written to a file named test"
 - Not mosquitoes, thankfully
 
 ## Additional information
