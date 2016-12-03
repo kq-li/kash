@@ -49,84 +49,64 @@ Systems - Fall 2016 - Period 10
 
 ## Function headers
 kash.c - Everything
- * void copyBetween(char *dest, char *start, char *end);
- *
- * Copies contents of string between start and end to dest.
- * Modifies dest.
+* void copyBetween(char *dest, char *start, char *end);
+ 	* Copies contents of string between start and end to dest.
+ 	* Modifies dest.
 
- * void shift(char *str, int offset);
- * 
- * Shifts all characters in str leftwards by offset.
- * Truncates characters as they pass the first character.
- * Modifies str.
+* void shift(char *str, int offset);
+	* Shifts all characters in str leftwards by offset.
+	* Truncates characters as they pass the first character.
+	* Modifies str.
 
- * void stripChars(char *str, char *toStrip, char *escape)
- * 
- * Removes all occurrences of the characters in toStrip from the start and end
- * of str except those preceded by a character in escape.
- * Modifies str.
+* void stripChars(char *str, char *toStrip, char *escape)
+	* Removes all occurrences of the characters in toStrip from the start and end of str except those preceded by a character in escape.
+	* Modifies str.
 
- * int startsWith(char *str, char *key);
- * 
- * Returns 1 if str starts with key, otherwise 0.
+* int startsWith(char *str, char *key);
+	* Returns 1 if str starts with key, otherwise 0.
 
- * char **splitOnChars(char *str, char *delim, char *escRegion, char *escOne);
- * 
- * Custom strsep function. Generates a series of strings by splitting str on
- * delimiter characters specified in delim.
- * Delimiter characters wrapped in escRegion or preceded by escOne are escaped.
- * Modifies str.
- * ret needs to be freed.
- *
- * Trust me. It works.
+* char **splitOnChars(char *str, char *delim, char *escRegion, char *escOne);
+	* Custom strsep function. Generates a series of strings by splitting str on delimiter characters specified in delim.
+	* Delimiter characters wrapped in escRegion or preceded by escOne are escaped.
+	* Modifies str.
+	* ret needs to be freed.
+	* Trust me. It works.
 
- * char **parseInput(char *input);
- * 
- * Splits input on spaces, escaped by quotes (") and backslashes ("\").
- * Returns the parsed input.
- * Both command and s (command[0]) need to be freed.
+* char **parseInput(char *input);
+	* Splits input on spaces, escaped by quotes (") and backslashes ("\").
+	* Returns the parsed input.
+	* Both command and s (command[0]) need to be freed.
 
- * void redirStdoutWrite(char *input, char *filename);
- *
- * Executes input with filename as stdout in overwrite mode.
+* void redirStdoutWrite(char *input, char *filename);
+	* Executes input with filename as stdout in overwrite mode.
 
- * void redirStdoutAppend(char *input, char *filename);
- *
- * Executes input with filename as stdout in append mode.
+* void redirStdoutAppend(char *input, char *filename);
+	* Executes input with filename as stdout in append mode.
 
- * void redirStderrWrite(char *input, char *filename);
- *
- * Executes input with filename as stderr in overwrite mode.
+* void redirStderrWrite(char *input, char *filename);
+	* Executes input with filename as stderr in overwrite mode.
 
- * void redirStderrAppend(char *input, char *filename);
- *
- * Executes input with filename as stderr in append mode.
+* void redirStderrAppend(char *input, char *filename);
+	* Executes input with filename as stderr in append mode.
 
- * void redirStdoutStderrWrite(char *input, char *filename);
- *
- * Executes input with filename as stdout and stderr in write mode.
+* void redirStdoutStderrWrite(char *input, char *filename);
+	* Executes input with filename as stdout and stderr in write mode.
 
- * void redirStdoutStderrAppend(char *input, char *filename);
- *
- * Executes input with filename as stdout and stderr in append mode.
+* void redirStdoutStderrAppend(char *input, char *filename);
+	* Executes input with filename as stdout and stderr in append mode.
 
- * void redirStdin(char *input, char *filename);
- *
- * Executes input with filename as stdin.
+* void redirStdin(char *input, char *filename);
+	* Executes input with filename as stdin.
 
- * void redirPipe(char *input1, char *input2);
- *
- * Executes both input1 and input2 with stdin of input2 as the stdout of input1.
+* void redirPipe(char *input1, char *input2);
+	* Executes both input1 and input2 with stdin of input2 as the stdout of input1.
 
- * void execute(char *input);
- *
- * Parses and executes input as line containing one or more commands.
- * Modifies input.
+* void execute(char *input);
+	* Parses and executes input as line containing one or more commands.
+	* Modifies input.
 
- * void prompt();
- *
- * Prompts the user to enter a command.
+* void prompt();
+	* Prompts the user to enter a command.
 
- * int main();
- *
- * Initializes and runs the program.
+* int main();
+	* Initializes and runs the program.
