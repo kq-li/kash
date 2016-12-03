@@ -12,8 +12,9 @@ Systems - Fall 2016 - Period 10
 	- Supported commands
 		- Most bash commands
 		- "kash" (try it!)
-- Processes operators from left to right; supports multiple operators
+- Processes operators from left to right
 	- ; between commands executes the first, then the second
+		- Multiple ; supported
 	- < redirects stdin to read from a file
 	- > redirects stdout to overwrite a file
 	- >> redirects stdout to append to a file
@@ -22,7 +23,7 @@ Systems - Fall 2016 - Period 10
 	- &> redirects stdout and stderr to overwrite a file
 	- &>> redirects stdout and stderr to append to a file
 	- | redirects stdout of the first command to stdin of the second command
-		- Supports multiple pipes
+		- Multiple pipes supported
 	- & backgrounds a process
 - Aesthetically pleasing prompt geared towards maximum user satisfaction
 	- Supports arrow keys, emacs shortcut navigation, history, and tab completion
@@ -39,6 +40,8 @@ Systems - Fall 2016 - Period 10
 
 ## Bugs
 - ^C and ^Z exit kash entirely instead of terminating/backgrounding the current process
+- Only one redirection operator is supported at a time except pipes
+	- "ls > test 2> test2" results in the output of ls being written to a file named "test 2> test2"
 - Mosquitoes
 
 ## Additional information
